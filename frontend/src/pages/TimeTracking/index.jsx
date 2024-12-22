@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Space } from 'antd';
+import { Table, Select, Space, Button, Modal } from 'antd';
 import {
     Box,
     Heading,
@@ -7,6 +7,7 @@ import {
     Flex,
     Spinner,
 } from '@chakra-ui/react';
+import { ReloadOutlined, MoreOutlined } from '@ant-design/icons';
 import axios from '../../utils/axios';
 import api from '../../utils/api';
 import dayjs from 'dayjs';
@@ -19,7 +20,8 @@ const TimeTracking = () => {
     const [selectedMonth, setSelectedMonth] = useState(dayjs().format('MM/YYYY'));
     const tableBgColor = useColorModeValue('white', 'gray.700');
     const textColor = useColorModeValue('black', 'white');
-
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedDayLogs, setSelectedDayLogs] = useState([]);
 
     const generateMonths = () => {
         const currentMonth = dayjs();
@@ -36,6 +38,33 @@ const TimeTracking = () => {
 
     const months = generateMonths();
 
+    const processTimeLogs = (data) => {
+        const groupedLogs = {};
+        data.forEach(log => {
+            const date = dayjs(log.time).format('YYYY-MM-DD');
+            if (!groupedLogs[date]) {
+                groupedLogs[date] = [];
+            }
+            groupedLogs[date].push(log);
+        });
+
+        const processedLogs = Object.keys(groupedLogs).map(date => {
+            const logs = groupedLogs[date];
+            logs.sort((a, b) => dayjs(a.time).valueOf() - dayjs(b.time).valueOf());
+
+            return {
+                date: date,
+                check_in: logs[0].time,
+                check_out: logs[logs.length - 1].time,
+                all_logs: logs
+            };
+        });
+
+        processedLogs.sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
+
+        return processedLogs;
+    };
+
     const fetchTimeLogs = async (month) => {
         setLoading(true);
         try {
@@ -47,16 +76,17 @@ const TimeTracking = () => {
 
             const data = await axios.execute(
                 'get',
-                `${api.USER.get_time_tracking}?startDate=${startDate}&endDate=${endDate}`,
+                `${api.USER.get_tracking_time}?startDate=${startDate}&endDate=${endDate}`,
                 null,
                 { enableMessage: false }
             );
-            setLoading(false);
-            setTimeLogs(_ => data?.time_logs);
+            setTimeLogs(processTimeLogs(data));
         }
         catch (e) {
-            setLoading(false)
             console.log(e);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -66,6 +96,15 @@ const TimeTracking = () => {
 
     const handleMonthChange = (value) => {
         setSelectedMonth(value);
+    };
+
+    const handleRefresh = () => {
+        fetchTimeLogs(selectedMonth);
+    };
+
+    const handleShowMore = (logs) => {
+        setSelectedDayLogs(logs);
+        setModalVisible(true);
     };
 
     const columns = [
@@ -87,6 +126,15 @@ const TimeTracking = () => {
             key: 'check_out',
             render: (time) => time ? dayjs(time).format('HH:mm:ss') : null,
         },
+        {
+            title: '',
+            key: 'action',
+            render: (text, record) => (
+                <Button type="link" icon={<MoreOutlined />} onClick={() => handleShowMore(record.all_logs)}>
+                    More
+                </Button>
+            ),
+        },
     ];
 
     return (
@@ -95,24 +143,58 @@ const TimeTracking = () => {
                 <Heading as="h1" size="lg" color={textColor}>
                     Chấm công
                 </Heading>
-                <Select
-                    size="large"
-                    defaultValue={selectedMonth}
-                    options={months}
-                    onChange={handleMonthChange}
-                    style={{ width: 200 }}
-                />
+                <Space>
+                    <Select
+                        size="large"
+                        defaultValue={selectedMonth}
+                        options={months}
+                        onChange={handleMonthChange}
+                        style={{ width: 200 }}
+                    />
+                    <Button
+                        size="large"
+                        icon={<ReloadOutlined />}
+                        onClick={handleRefresh}
+                    >
+                        Làm mới
+                    </Button>
+                </Space>
             </Flex>
             <Table
                 columns={columns}
                 dataSource={timeLogs}
-                rowKey="_id"
+                rowKey="date"
                 bordered
                 bgcolor={tableBgColor}
                 style={{ background: tableBgColor }}
                 loading={loading}
             />
 
+            <Modal
+                title="Chi tiết chấm công"
+                open={modalVisible}
+                onCancel={() => setModalVisible(false)}
+                footer={null}
+            >
+                <Table
+                    columns={[
+                        {
+                            title: 'Cổng',
+                            dataIndex: 'gate',
+                            key: 'gate',
+                        },
+                        {
+                            title: 'Thời gian',
+                            dataIndex: 'time',
+                            key: 'time',
+                            render: (time) => dayjs(time).format('HH:mm:ss'),
+                        },
+                    ]}
+                    dataSource={selectedDayLogs}
+                    rowKey="_id"
+                    pagination={false}
+                />
+            </Modal>
         </Box>
     );
 };

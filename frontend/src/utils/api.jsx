@@ -6,7 +6,7 @@ const GLOBAL = {
 }
 const USER = {
     get_profile: '/get-profile',
-    get_time_tracking: '/get-time-tracking',
+    get_tracking_time: '/get-tracking-time',
 }
 const ADMIN = {
     add_gate: '/create-gate',
@@ -15,6 +15,8 @@ const ADMIN = {
     add_employee: '/create-user',
     get_employee: '/get-users',
     update_employee: '/update-forbidden-information',
+    switch_employee: '/switch-user-activation',
+    switch_gate: '/switch-gate-activation',
 }
 const API = {
     GLOBAL: Object.keys(GLOBAL).reduce((acc, key) => {

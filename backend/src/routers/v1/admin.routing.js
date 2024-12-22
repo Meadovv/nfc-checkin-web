@@ -42,4 +42,12 @@ router.post('/update-gate', middlewares.ErrorMiddleware.asyncHandler(
     AdminController.updateGate
 ));
 
+router.post('/switch-user-activation', middlewares.ErrorMiddleware.asyncHandler(
+    AdminController.switchUserActivation
+));
+
+router.post('/switch-gate-activation', middlewares.ErrorMiddleware.asyncHandler(
+    AdminController.switchGateActivation
+));
+
 module.exports = router;

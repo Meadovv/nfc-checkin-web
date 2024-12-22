@@ -29,7 +29,6 @@ const Employees = () => {
     const tableBgColor = useColorModeValue('white', 'gray.700');
     const textColor = useColorModeValue('black', 'white');
 
-
     const fetchEmployees = async (page = 1, pageSize = 10, search = '') => {
         setLoading(true);
         try {
@@ -52,7 +51,6 @@ const Employees = () => {
     useEffect(() => {
         fetchEmployees(page, pageSize, search);
     }, [page, pageSize]);
-
 
     const handleUpdateUser = (employee) => {
         setSelectedEmployee(employee);
@@ -86,8 +84,8 @@ const Employees = () => {
                 const updatedEmployees = employees.filter((emp) => emp.username !== employee.username);
                 setEmployees(updatedEmployees);
                 toast({
-                    title: 'Deleted',
-                    description: `Employee ${employee.username} deleted.`,
+                    title: 'Xóa thành công',
+                    description: `Nhân viên ${employee.username} đã được xóa.`,
                     status: 'success',
                     duration: 3000,
                     isClosable: true,
@@ -99,7 +97,7 @@ const Employees = () => {
     const handleSwitchUser = async (employee) => {
         AntdModal.confirm({
             title: 'Xác nhận',
-            content: `Bạn có chắc muốn ${employee.activated ? 'hủy kích hoạt' : 'kích hoạt'} nhân viên ${employee.username}?`,
+            content: `Bạn có chắc muốn ${employee.activated ? 'vô hiệu hóa' : 'kích hoạt'} nhân viên ${employee.username}?`,
             okText: 'Xác nhận',
             okType: employee.activated ? 'danger' : 'primary',
             cancelText: 'Hủy',
@@ -109,13 +107,14 @@ const Employees = () => {
                 // TODO: call api switch user
                 try {
                     setLoading(true);
+                    await axios.execute('post', api.ADMIN.switch_employee, { username: employee.username }, { enableMessage: false });
                     const updatedEmployees = employees.map(emp =>
                         emp.username === employee.username ? { ...emp, activated: !emp.activated } : emp
                     );
                     setEmployees(updatedEmployees);
                     toast({
-                        title: employee.activated ? 'Deactivated' : 'Activated',
-                        description: `Employee ${employee.username} ${employee.activated ? 'deactivated' : 'activated'}.`,
+                        title: employee.activated ? 'Vô hiệu hóa' : 'Kích hoạt',
+                        description: `Nhân viên ${employee.username} đã được ${employee.activated ? 'vô hiệu hóa' : 'kích hoạt'}.`,
                         status: 'success',
                         duration: 3000,
                         isClosable: true,
@@ -126,8 +125,8 @@ const Employees = () => {
                     setLoading(false);
                     console.log(e)
                     toast({
-                        title: 'Error',
-                        description: 'Error when updating status',
+                        title: 'Lỗi',
+                        description: 'Lỗi khi cập nhật trạng thái',
                         status: 'error',
                         duration: 3000,
                         isClosable: true,
@@ -169,25 +168,23 @@ const Employees = () => {
         }
     }
 
-
     const handleSearchChange = (e) => {
-      setSearch(e.target.value);
+        setSearch(e.target.value);
     };
 
     const handleSearchSubmit = () => {
-      fetchEmployees(1, pageSize, search);
+        fetchEmployees(1, pageSize, search);
         setPage(1);
     };
 
-
     const columns = [
         {
-            title: 'Username',
+            title: 'Tên đăng nhập',
             dataIndex: 'username',
             key: 'username',
         },
         {
-            title: 'Fullname Slug',
+            title: 'Tên đầy đủ',
             dataIndex: 'fullname_slug',
             key: 'fullname_slug',
             responsive: ['md'],
@@ -199,37 +196,37 @@ const Employees = () => {
             responsive: ['md'],
         },
         {
-            title: 'Status',
+            title: 'Trạng thái',
             dataIndex: 'activated',
             key: 'activated',
             render: (activated) => (
                 <Tag color={activated ? 'green' : 'red'}>
-                    {activated ? 'Activated' : 'Deactivated'}
+                    {activated ? 'Hoạt động' : 'Vô hiệu hóa'}
                 </Tag>
             ),
         },
         {
-            title: 'Actions',
+            title: 'Thao tác',
             key: 'actions',
             render: (text, employee) => (
                 <Space size="small">
                     <IconButton
                         icon={<EditIcon />}
                         colorScheme="blue"
-                        aria-label="Update Employee"
+                        aria-label="Cập nhật nhân viên"
                         onClick={() => handleUpdateUser(employee)}
                     />
                     <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        aria-label="Delete Employee"
+                        aria-label="Xóa nhân viên"
                         onClick={() => handleDeleteUser(employee)}
                         isDisabled={employee.activated}
                     />
                     <IconButton
                         icon={employee.activated ? <CloseIcon /> : <CheckIcon />}
                         colorScheme={employee.activated ? 'orange' : 'green'}
-                        aria-label={employee.activated ? 'Deactivate' : 'Activate'}
+                        aria-label={employee.activated ? 'Vô hiệu hóa' : 'Kích hoạt'}
                         onClick={() => handleSwitchUser(employee)}
                     />
                 </Space>
@@ -241,20 +238,20 @@ const Employees = () => {
         <Box p={5}>
             <Flex align="center" justify="space-between" mb={4}>
                 <Heading as="h1" size="lg" color={textColor}>
-                    Employees
+                    Quản lý nhân viên
                 </Heading>
                 <Button type='default' onClick={handleAddUser} size="large">
-                    Thêm Người dùng
+                    Thêm nhân viên
                 </Button>
             </Flex>
             <Flex mb={4} justify="end">
-              <AntdInput.Search
-                   placeholder="Username, Fullname Slug or NFC ID"
-                   size="large"
-                   onChange={handleSearchChange}
-                   onSearch={handleSearchSubmit}
-                   enterButton="Tìm kiếm"
-               />
+                <AntdInput.Search
+                    placeholder="Tên đăng nhập, tên đầy đủ hoặc NFC ID"
+                    size="large"
+                    onChange={handleSearchChange}
+                    onSearch={handleSearchSubmit}
+                    enterButton="Tìm kiếm"
+                />
             </Flex>
             <Table
                 loading={loading}
@@ -280,16 +277,17 @@ const Employees = () => {
                 />
             </Flex>
 
+            {/* Update Employee Modal */}
             <AntdModal
                 title="Thông tin nhân viên"
                 open={modalVisible}
                 onCancel={handleCancelModal}
                 footer={[
                     <Button key="cancel" onClick={handleCancelModal} size="large">
-                        Cancel
+                        Hủy
                     </Button>,
                     <Button key="update" type="primary" onClick={handleUpdateModal} size="large">
-                        Update
+                        Cập nhật
                     </Button>,
                 ]}
             >
@@ -303,26 +301,26 @@ const Employees = () => {
                             >
                                 <Input disabled size="large" />
                             </Form.Item>
-                            <Form.Item label="Fullname">
+                            <Form.Item label="Họ và tên">
                                 <Input value={selectedEmployee.fullname} disabled size="large" />
                             </Form.Item>
                             <Form.Item
-                                label="Username"
+                                label="Tên đăng nhập"
                                 name="username"
                             >
                                 <Input size="large" />
                             </Form.Item>
                             <Form.Item
-                                label="Fullname Slug"
+                                label="Tên đầy đủ"
                                 name="fullname_slug"
-                                rules={[{ required: true, message: 'Please input Fullname Slug!' }]}
+                                rules={[{ required: true, message: 'Vui lòng nhập tên đầy đủ!' }]}
                             >
                                 <Input size="large" />
                             </Form.Item>
                             <Form.Item
                                 label="NFC ID"
                                 name="nfc_id"
-                                rules={[{ required: true, message: 'Please input NFC ID!' }]}
+                                rules={[{ required: true, message: 'Vui lòng nhập NFC ID!' }]}
                             >
                                 <Input size="large" />
                             </Form.Item>
@@ -332,13 +330,14 @@ const Employees = () => {
                 </Form>
             </AntdModal>
 
+            {/* Add Employee Modal */}
             <AntdModal
                 title="Thêm nhân viên"
                 open={addModalVisible}
                 onCancel={handleCancelAddModal}
                 footer={[
                     <Button key="cancel" onClick={handleCancelAddModal} size="large">
-                        Cancel
+                        Hủy
                     </Button>,
                     <Button key="add" type="primary" onClick={handleAddModal} size="large">
                         Thêm
@@ -348,30 +347,30 @@ const Employees = () => {
                 <Form form={addForm} layout="vertical" size="large">
 
                     <Form.Item
-                        label="Username"
+                        label="Tên đăng nhập"
                         name="username"
-                        rules={[{ required: true, message: 'Please input Username!' }]}
+                        rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
                     >
                         <Input size="large" />
                     </Form.Item>
                     <Form.Item
-                        label="Fullname"
+                        label="Họ và tên"
                         name="fullname"
-                        rules={[{ required: true, message: 'Please input Fullname!' }]}
+                        rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
                     >
                         <Input size="large" />
                     </Form.Item>
                     <Form.Item
                         label="NFC ID"
                         name="nfc_id"
-                        rules={[{ required: true, message: 'Please input NFC ID!' }]}
+                        rules={[{ required: true, message: 'Vui lòng nhập NFC ID!' }]}
                     >
                         <Input size="large" />
                     </Form.Item>
                     <Form.Item
-                        label="Password"
+                        label="Mật khẩu"
                         name="password"
-                        rules={[{ required: true, message: 'Please input Password!' }]}
+                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
                     >
                         <Input.Password size="large" />
                     </Form.Item>

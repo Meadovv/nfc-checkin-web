@@ -7,10 +7,23 @@ const service = require('../services');
 class UserController {
     static nfcCheckIn = async (req, res) => {
         return new SUCCESS({
-            message: 'NFC Check In Success',
+            message: 'Check In Success',
             metadata: await service.UserService.nfcCheckIn({
                 ...utils.Lodash.verifyJSONFields({
-                    fields: ['nfc_id_jwt_encrypted'],
+                    fields: ['gate_id', 'nfc_id_jwt_encrypted'],
+                    object: req.query
+                })
+            })
+        }).send(req, res);
+    }
+
+    static getTrackingTime = async (req, res) => {
+        return new SUCCESS({
+            message: 'Get Tracking Time Success',
+            metadata: await service.UserService.getTrackingTime({
+                user: req.caller.user_id,
+                ...utils.Lodash.verifyJSONFields({
+                    fields: ['startDate', 'endDate'],
                     object: req.query
                 })
             })

@@ -29,6 +29,7 @@ const Gates = () => {
     const tableBgColor = useColorModeValue('white', 'gray.700');
     const textColor = useColorModeValue('black', 'white');
 
+    // Fetch gates data from API
     const fetchGates = async (page = 1, pageSize = 10, search = '') => {
         setLoading(true);
         try {
@@ -52,12 +53,14 @@ const Gates = () => {
         fetchGates(page, pageSize, search);
     }, [page, pageSize]);
 
+    // Handle update gate button click
     const handleUpdateGate = (gate) => {
         setSelectedGate(gate);
         form.setFieldsValue(gate);
         setModalVisible(true);
     };
 
+    // Handle update gate modal submit
     const handleUpdateModal = async () => {
         try {
             await form.validateFields()
@@ -70,22 +73,23 @@ const Gates = () => {
         }
     }
 
+    // Handle delete gate button click
     const handleDeleteGate = (gate) => {
         AntdModal.confirm({
             title: 'Xác nhận xóa',
-            content: `Bạn có chắc muốn xóa cổng ${gate.gate_name}?`,
+            content: `Bạn có chắc chắn muốn xóa cổng ${gate.gate_name}?`,
             okText: 'Xóa',
             okType: 'danger',
             cancelText: 'Hủy',
             okButtonProps: { size: 'large' },
             cancelButtonProps: { size: 'large' },
             onOk() {
-              // TODO: call api delete gate
+                // TODO: call api delete gate
                 const updatedGates = gates.filter((g) => g.gate_id !== gate.gate_id);
                 setGates(updatedGates);
                 toast({
-                    title: 'Deleted',
-                    description: `Gate ${gate.gate_name} deleted.`,
+                    title: 'Xóa thành công',
+                    description: `Cổng ${gate.gate_name} đã được xóa.`,
                     status: 'success',
                     duration: 3000,
                     isClosable: true,
@@ -94,27 +98,75 @@ const Gates = () => {
         });
     };
 
+    // Handle switch gate activation
+    const handleSwitchActivation = async (gate) => {
+        AntdModal.confirm({
+            title: 'Xác nhận',
+            content: `Bạn có chắc chắn muốn ${gate.activated ? 'vô hiệu hóa' : 'kích hoạt'} cổng ${gate.gate_name}?`,
+            okText: 'Xác nhận',
+            okType: gate.activated ? 'danger' : 'primary',
+            cancelText: 'Hủy',
+            okButtonProps: { size: 'large' },
+            cancelButtonProps: { size: 'large' },
+            onOk: async () => {
+                try {
+                    setLoading(true);
+                    await axios.execute('post', api.ADMIN.update_gate, { gate_id: gate.gate_id, activated: !gate.activated }, { enableMessage: false });
+                    const updatedGates = gates.map(g =>
+                        g.gate_id === gate.gate_id ? { ...g, activated: !gate.activated } : g
+                    );
+                    setGates(updatedGates);
+                    toast({
+                        title: gate.activated ? 'Vô hiệu hóa' : 'Kích hoạt',
+                        description: `Cổng ${gate.gate_name} đã được ${gate.activated ? 'vô hiệu hóa' : 'kích hoạt'}.`,
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                    setLoading(false);
+                }
+                catch (e) {
+                    setLoading(false);
+                    console.log(e)
+                    toast({
+                        title: 'Lỗi',
+                        description: 'Lỗi khi cập nhật trạng thái',
+                        status: 'error',
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
+            },
+        });
+    };
 
-
+    // Handle page change
     const onPageChange = (page) => {
         setPage(page);
     }
 
+    // Handle page size change
     const onShowSizeChange = (_, size) => {
         setPageSize(size);
         setPage(1);
     };
 
+    // Handle cancel update modal
     const handleCancelModal = () => {
         setModalVisible(false);
     }
+
+    // Handle cancel add modal
     const handleCancelAddModal = () => {
         setAddModalVisible(false);
     }
 
+    // Handle add gate button click
     const handleAddGate = () => {
         setAddModalVisible(true);
     }
+
+    // Handle add gate modal submit
     const handleAddModal = async () => {
         try {
             await addForm.validateFields()
@@ -123,50 +175,68 @@ const Gates = () => {
             addForm.resetFields();
             fetchGates(page, pageSize, search);
         }
-        catch(e) {
+        catch (e) {
             console.log(e);
         }
     }
 
-
+    // Handle search input change
     const handleSearchChange = (e) => {
-      setSearch(e.target.value);
+        setSearch(e.target.value);
     };
 
+    // Handle search submit
     const handleSearchSubmit = () => {
-      fetchGates(1, pageSize, search);
-       setPage(1);
+        fetchGates(1, pageSize, search);
+        setPage(1);
     };
 
-
+    // Table columns definition
     const columns = [
         {
-            title: 'Gate ID',
+            title: 'ID cổng',
             dataIndex: 'gate_id',
             key: 'gate_id',
         },
         {
-            title: 'Gate Name',
+            title: 'Tên cổng',
             dataIndex: 'gate_name',
             key: 'gate_name',
         },
         {
-            title: 'Actions',
+            title: 'Trạng thái',
+            dataIndex: 'activated',
+            key: 'activated',
+            render: (activated) => (
+                <Tag color={activated ? 'green' : 'red'}>
+                    {activated ? 'Hoạt động' : 'Không hoạt động'}
+                </Tag>
+            ),
+        },
+        {
+            title: 'Thao tác',
             key: 'actions',
             render: (text, gate) => (
                 <Space size="small">
                     <IconButton
                         icon={<EditIcon />}
                         colorScheme="blue"
-                        aria-label="Update Gate"
+                        aria-label="Cập nhật cổng"
                         onClick={() => handleUpdateGate(gate)}
                     />
                     <IconButton
                         icon={<DeleteIcon />}
                         colorScheme="red"
-                        aria-label="Delete Gate"
+                        aria-label="Xóa cổng"
                         onClick={() => handleDeleteGate(gate)}
+                        disabled={gate.activated}
 
+                    />
+                    <IconButton
+                        icon={gate.activated ? <CloseIcon /> : <CheckIcon />}
+                        colorScheme={gate.activated ? 'orange' : 'green'}
+                        aria-label={gate.activated ? 'Vô hiệu hóa cổng' : 'Kích hoạt cổng'}
+                        onClick={() => handleSwitchActivation(gate)}
                     />
                 </Space>
             ),
@@ -177,20 +247,20 @@ const Gates = () => {
         <Box p={5}>
             <Flex align="center" justify="space-between" mb={4}>
                 <Heading as="h1" size="lg" color={textColor}>
-                    Gates
+                    Quản lý cổng
                 </Heading>
-                  <Button type='default' onClick={handleAddGate} size="large">
-                    Thêm Cổng
+                <Button type='default' onClick={handleAddGate} size="large">
+                    Thêm cổng
                 </Button>
             </Flex>
-             <Flex mb={4} justify="end">
-               <AntdInput.Search
-                   placeholder="Gate ID or Gate Name"
-                   size="large"
-                   onChange={handleSearchChange}
-                   onSearch={handleSearchSubmit}
-                   enterButton="Tìm kiếm"
-               />
+            <Flex mb={4} justify="end">
+                <AntdInput.Search
+                    placeholder="ID cổng hoặc tên cổng"
+                    size="large"
+                    onChange={handleSearchChange}
+                    onSearch={handleSearchSubmit}
+                    enterButton="Tìm kiếm"
+                />
             </Flex>
             <Table
                 loading={loading}
@@ -216,16 +286,17 @@ const Gates = () => {
                 />
             </Flex>
 
+            {/* Update Gate Modal */}
             <AntdModal
                 title="Thông tin cổng"
                 open={modalVisible}
                 onCancel={handleCancelModal}
                 footer={[
                     <Button key="cancel" onClick={handleCancelModal} size="large">
-                        Cancel
+                        Hủy
                     </Button>,
                     <Button key="update" type="primary" onClick={handleUpdateModal} size="large">
-                        Update
+                        Cập nhật
                     </Button>,
                 ]}
             >
@@ -240,22 +311,22 @@ const Gates = () => {
                                 <Input disabled size="large" />
                             </Form.Item>
                             <Form.Item
-                                label="Gate ID"
+                                label="ID cổng"
                                 name="gate_id"
-                                >
+                            >
                                 <Input size="large" />
                             </Form.Item>
                             <Form.Item
-                                label="Gate Name"
+                                label="Tên cổng"
                                 name="gate_name"
                             >
                                 <Input size="large" />
                             </Form.Item>
-                             <Form.Item
-                                label="Secret"
+                            <Form.Item
+                                label="Mật khẩu cổng"
                                 name="gate_secret"
                             >
-                                <Input  size="large" />
+                                <Input.Password size="large" />
                             </Form.Item>
 
                         </>
@@ -264,44 +335,45 @@ const Gates = () => {
                 </Form>
             </AntdModal>
 
-             <AntdModal
-                 title="Thêm cổng"
-                 open={addModalVisible}
-                 onCancel={handleCancelAddModal}
-                 footer={[
-                     <Button key="cancel" onClick={handleCancelAddModal} size="large">
-                         Cancel
-                     </Button>,
-                     <Button key="add" type="primary" onClick={handleAddModal} size="large">
-                         Thêm
-                     </Button>,
-                 ]}
-             >
-                 <Form form={addForm} layout="vertical" size="large">
+            {/* Add Gate Modal */}
+            <AntdModal
+                title="Thêm cổng"
+                open={addModalVisible}
+                onCancel={handleCancelAddModal}
+                footer={[
+                    <Button key="cancel" onClick={handleCancelAddModal} size="large">
+                        Hủy
+                    </Button>,
+                    <Button key="add" type="primary" onClick={handleAddModal} size="large">
+                        Thêm
+                    </Button>,
+                ]}
+            >
+                <Form form={addForm} layout="vertical" size="large">
 
-                     <Form.Item
-                         label="Gate ID"
-                         name="gate_id"
-                         rules={[{ required: true, message: 'Please input Gate ID!' }]}
-                     >
-                         <Input size="large" />
-                     </Form.Item>
-                     <Form.Item
-                         label="Gate Name"
-                         name="gate_name"
-                         rules={[{ required: true, message: 'Please input Gate Name!' }]}
-                     >
-                         <Input size="large" />
-                     </Form.Item>
-                      <Form.Item
-                        label="Secret"
-                        name="gate_secret"
-                        rules={[{ required: true, message: 'Please input Secret!' }]}
+                    <Form.Item
+                        label="ID cổng"
+                        name="gate_id"
+                        rules={[{ required: true, message: 'Vui lòng nhập ID cổng!' }]}
                     >
-                          <Input.Password size="large"/>
-                     </Form.Item>
-                 </Form>
-             </AntdModal>
+                        <Input size="large" />
+                    </Form.Item>
+                    <Form.Item
+                        label="Tên cổng"
+                        name="gate_name"
+                        rules={[{ required: true, message: 'Vui lòng nhập tên cổng!' }]}
+                    >
+                        <Input size="large" />
+                    </Form.Item>
+                    <Form.Item
+                        label="Mật khẩu cổng"
+                        name="gate_secret"
+                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu cổng!' }]}
+                    >
+                        <Input.Password size="large" />
+                    </Form.Item>
+                </Form>
+            </AntdModal>
         </Box>
     );
 };

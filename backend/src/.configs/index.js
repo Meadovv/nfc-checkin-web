@@ -17,8 +17,8 @@ const dev = {
     cors: {
         whitelist_domain: [
             'http://localhost:5173', // For development
-            'http://monkfish-optimum-dingo.ngrok-free.app', // For device
-            'https://minnow-stunning-man.ngrok-free.app', // For client
+            'http://owl-eternal-nearly.ngrok-free.app', // For device
+            'https://meadowpham.id.vn/', // For client
         ]
     }
 };
@@ -39,7 +39,8 @@ const prod = {
     },
     cors: {
         whitelist_domain: [
-            'https://monkfish-optimum-dingo.ngrok-free.app'
+            'http://owl-eternal-nearly.ngrok-free.app', // For device
+            'https://meadowpham.id.vn/', // For client
         ]
     }
 };

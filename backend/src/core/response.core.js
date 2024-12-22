@@ -24,6 +24,7 @@ class SuccessResponse {
             ...this,
             ip: req.client_ip,
             time: moment().format('DD-MM-YYYY HH:mm:ss'),
+            seconds: moment().utcOffset('+07:00').unix(),
         });
     }
 }

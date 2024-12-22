@@ -3,25 +3,23 @@ const {
 } = require('mongoose');
 const configs = require('../.configs');
 
-const collection_name = 'gates';
+const collection_name = 'records';
 
 const schema = new Schema({
-    gate_id: {
-        type: String,
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'users',
         required: true
     },
-    gate_name: {
-        type: String,
+    gate: {
+        type: Schema.Types.ObjectId,
+        ref: 'gates',
         required: true
     },
-    gate_secret: {
-        type: String,
+    time: {
+        type: Date,
         required: true
-    },
-    activated: {
-        type: Boolean,
-        default: true
-    },
+    }
 }, {
     timestamps: true,
     versionKey: false,

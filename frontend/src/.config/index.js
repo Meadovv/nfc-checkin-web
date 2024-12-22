@@ -1,5 +1,5 @@
 const config = {
-    BASE_URL: 'https://minnow-stunning-man.ngrok-free.app'
+    BASE_URL: 'https://api.meadowpham.id.vn/'
 }
 
 export default config;

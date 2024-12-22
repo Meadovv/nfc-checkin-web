@@ -23,9 +23,11 @@ export default function SplitScreen() {
 
     const onFinishLogin = async ({ username, password }) => {
         setLoading(true)
-        await login({ username, password })
+        const result = await login({ username, password })
+        if(result) {
+            navigate(robots.home)
+        }
         setLoading(false)
-        navigate(robots.home)
     }
 
     return (

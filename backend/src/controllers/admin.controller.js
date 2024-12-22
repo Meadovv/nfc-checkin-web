@@ -95,6 +95,30 @@ class AdminController {
             })
         }).send(req, res);
     }
+
+    static switchUserActivation = async (req, res) => {
+        return new SUCCESS({
+            message: 'User updated',
+            metadata: await services.AdminService.switchUserActivation({
+                ...utils.Lodash.verifyJSONFields({
+                    fields: ['username'],
+                    object: req.body
+                })
+            })
+        }).send(req, res);
+    }
+
+    static switchGateActivation = async (req, res) => {
+        return new SUCCESS({
+            message: 'Gate updated',
+            metadata: await services.AdminService.switchGateActivation({
+                ...utils.Lodash.verifyJSONFields({
+                    fields: ['gate_id'],
+                    object: req.body
+                })
+            })
+        }).send(req, res);
+    }
 }
 
 module.exports = AdminController;

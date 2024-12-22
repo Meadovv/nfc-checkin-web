@@ -19,12 +19,14 @@ export const AuthProvider = ({ children }) => {
 
     const login = async ({ username, password }) => {
         const data = await axios.execute('post', api.GLOBAL.login, { username, password });
+        if (!data) return false;
         const token = {
             'x-api-key': data.token,
             'x-user-id': data._id,
         }
         setToken(token);
         localStorage.setItem('token', JSON.stringify(token));
+        return true;
     };
 
     const verify = async () => {

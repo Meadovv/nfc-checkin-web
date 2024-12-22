@@ -7,6 +7,7 @@ const collection_name = 'keys';
 const schema = new Schema({
     user_id: {
         type: Schema.Types.ObjectId,
+        ref: 'users',
         required: true
     },
     secret: {

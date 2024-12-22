@@ -165,7 +165,7 @@ class AdminService {
                 .find(query)
                 .skip((page - 1) * Number(limit))
                 .limit(Number(limit) + 1)
-                .select('gate_id gate_name gate_secret')
+                .select('gate_id gate_name gate_secret activated')
                 .lean(),
             models.GateModel
                 .countDocuments(query)
@@ -231,6 +231,32 @@ class AdminService {
             fields: ['gate_id', 'gate_name'],
             object: gate
         });
+    }
+
+    static switchUserActivation = async ({ username }) => {
+        const user = await models.UserModel.findOne({ username });
+        if (!user) {
+            throw new NOT_FOUND_ERROR('User not found');
+        }
+        const activated = !user.activated;
+        await models.UserModel.findByIdAndUpdate(
+            user._id,
+            { activated }
+        );
+        return { activated };
+    }
+
+    static switchGateActivation = async ({ gate_id }) => {
+        const gate = await models.GateModel.findOne({ gate_id });
+        if (!gate) {
+            throw new NOT_FOUND_ERROR('Gate not found');
+        }
+        const activated = !gate.activated;
+        await models.GateModel.findByIdAndUpdate(
+            gate._id,
+            { activated }
+        );
+        return { activated };
     }
 }
 
